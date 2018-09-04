@@ -1,0 +1,4 @@
+Ansible==2.6.1
+ansible-lint==3.4.23
+openshift==0.7.1
+PyYAML==3.13

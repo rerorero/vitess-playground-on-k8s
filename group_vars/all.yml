@@ -1,0 +1,7 @@
+---
+# override with your context
+kubeconfig: ~/.kube/config.vultr
+
+namespace: vt
+cells:
+  - cell1

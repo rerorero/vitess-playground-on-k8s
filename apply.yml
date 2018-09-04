@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  gather_facts: no
+  roles:
+    - namespace
+    - rbac
+    - etcd-operator
+
+- hosts: localhost
+  gather_facts: no
+  roles:
+    - name: etcd
+      etcd_cluster_name: global
+  tasks:
+    - include_role:
+        name: etcd
+      with_items: "{{ cells }}"
+      loop_control:
+        loop_var: etcd_cluster_name

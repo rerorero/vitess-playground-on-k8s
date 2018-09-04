@@ -1,0 +1,14 @@
+---
+- name: Deploy etcd cluster
+  k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: "etcd.database.coreos.com/v1beta2"
+      kind: "EtcdCluster"
+      metadata:
+        name: "etcd-{{ etcd_cluster_name }}"
+        namespace: "{{ namespace }}"
+      spec:
+        size: "{{ etcd_cluster_size }}"
+        version: "{{ etcd_version }}"

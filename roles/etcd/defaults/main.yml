@@ -1,0 +1,4 @@
+---
+etcd_cluster_name: default
+etcd_cluster_size: 3
+etcd_version: 3.2.13
