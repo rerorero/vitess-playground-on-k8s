@@ -12,3 +12,7 @@
       spec:
         size: "{{ etcd_cluster_size }}"
         version: "{{ etcd_version }}"
+  register: result
+  until: "result is success"
+  retries: 10
+  delay: 5
