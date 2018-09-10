@@ -32,3 +32,10 @@
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.name
+
+- name: Wait for CRD to become ready
+  shell: "kubectl --kubeconfig={{ kubeconfig }} --namespace={{ namespace }} get EtcdCluster"
+  register: result
+  until: result is success
+  retires: 10
+  delay: 10

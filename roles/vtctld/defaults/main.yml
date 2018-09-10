@@ -1,0 +1,14 @@
+---
+vtctld_web_port: 15000
+vtctld_web_nodeport: 31000
+vtctld_grpc_port: 15999
+vtctld_grpc_nodeport: 31999
+vtctld_limits_mem: "128Mi"
+vtctld_limits_cpu: "100m"
+vtctld_backup_flags: ""
+vtctld_cell: "{{ cells[0] }}"
+vtctld_replicas: 2
+# TODO: backup with NFS
+# vtctld_backup_flags: |
+#   -backup_storage_implementation file
+#   -file_backup_storage_root {{ vtctld_backup_dir }}

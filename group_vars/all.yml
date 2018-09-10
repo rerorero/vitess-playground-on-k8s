@@ -5,3 +5,7 @@ kubeconfig: ~/.kube/config.vultr
 namespace: vt
 cells:
   - cell1
+global_etcd_cluster_name: global
+global_etcd_service_name: "etcd-{{ global_etcd_cluster_name }}-client"
+
+vitess_image: 'vitess/lite:v2.2'

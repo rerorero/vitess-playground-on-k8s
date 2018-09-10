@@ -1,4 +1,9 @@
 ---
+- name: Check if the cluster already exists
+  shell: "kubectl --kubeconfig={{ kubeconfig }} --namespace={{ namespace }} get EtcdCluster etcd-{{ etcd_cluster_name }}"
+  register: existed
+  failed_when: 'existed is failure and "NotFound" not in existed.stderr'
+
 - name: Deploy etcd cluster
   k8s:
     kubeconfig: "{{ kubeconfig }}"
@@ -12,7 +17,4 @@
       spec:
         size: "{{ etcd_cluster_size }}"
         version: "{{ etcd_version }}"
-  register: result
-  until: "result is success"
-  retries: 10
-  delay: 5
+  when: existed.rc != 0

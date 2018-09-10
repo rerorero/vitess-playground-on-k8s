@@ -1,0 +1,96 @@
+---
+- name: Creating vtctld service
+  k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata:
+        name: vtctld
+        namespace: "{{ namespace }}"
+        labels:
+          component: vtctld
+          app: vitess
+      spec:
+        ports:
+          - name: web
+            port: "{{ vtctld_web_port }}"
+            nodePort: "{{ vtctld_web_nodeport }}"
+          - name: grpc
+            port: "{{ vtctld_grpc_port }}"
+            nodePort: "{{ vtctld_grpc_nodeport }}"
+        selector:
+          component: vtctld
+          app: vitess
+        type: NodePort
+
+- name: Creating vtctld controller
+  k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      kind: ReplicationController
+      apiVersion: v1
+      metadata:
+        name: vtctld
+        namespace: "{{ namespace }}"
+      spec:
+        replicas: "{{ vtctld_replicas }}"
+        template:
+          metadata:
+            labels:
+              component: vtctld
+              app: vitess
+          spec:
+            containers:
+              - name: vtctld
+                image: "{{ vitess_image }}"
+                livenessProbe:
+                  httpGet:
+                    path: /debug/vars
+                    port: "{{ vtctld_web_port }}"
+                  initialDelaySeconds: 30
+                  timeoutSeconds: 5
+                volumeMounts:
+                  - name: syslog
+                    mountPath: /dev/log
+                  - name: vtdataroot
+                    mountPath: /vt/vtdataroot
+                  - name: certs
+                    readOnly: true
+                    # Mount root certs from the host OS into the location
+                    # expected for our container OS (Debian):
+                    mountPath: /etc/ssl/certs/ca-certificates.crt
+                resources:
+                  limits:
+                    memory: "{{ vtctld_limits_mem }}"
+                    cpu: "{{ vtctld_limits_cpu }}"
+                command:
+                  - sh
+                  - "-c"
+                  - >-
+                    mkdir -p $VTDATAROOT/tmp &&
+                    chown -R vitess /vt &&
+                    su -p -c "/vt/bin/vtctld
+                    -cell {{ vtctld_cell }}
+                    -web_dir $VTTOP/web/vtctld
+                    -web_dir2 $VTTOP/web/vtctld2/app
+                    -workflow_manager_init
+                    -workflow_manager_use_election
+                    -log_dir $VTDATAROOT/tmp
+                    -alsologtostderr
+                    -port {{ vtctld_web_port }}
+                    -grpc_port {{ vtctld_grpc_port }}
+                    -service_map 'grpc-vtctl'
+                    -topo_implementation etcd2
+                    -topo_global_server_address http://{{ global_etcd_service_name }}:2379
+                    -topo_global_root /global
+                    {{ vtctld_backup_flags }} " vitess
+            volumes:
+              - name: syslog
+                hostPath: {path: /dev/log}
+              - name: vtdataroot
+                emptyDir: {}
+              - name: certs
+                hostPath: {path: /etc/pki/tls/certs/ca-bundle.crt}

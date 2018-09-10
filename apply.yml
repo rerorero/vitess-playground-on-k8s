@@ -10,10 +10,15 @@
   gather_facts: no
   roles:
     - name: etcd
-      etcd_cluster_name: global
+      etcd_cluster_name: "{{ global_etcd_cluster_name }}"
   tasks:
     - include_role:
         name: etcd
       with_items: "{{ cells }}"
       loop_control:
         loop_var: etcd_cluster_name
+
+- hosts: localhost
+  gather_facts: no
+  roles:
+    - vtctld
