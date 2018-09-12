@@ -1,0 +1,5 @@
+---
+# TODO: The actual etcd port number can be retrive from kube api.
+- name: Create a new cell if not exists
+  command: "vtctlclient -server {{ vtctld_endpoint }} AddCellInfo --root /{{ cell }} -server_address http://etcd-{{ cell }}-client:2379 {{ cell }}"
+  when: 'cell.name not in cellnames.stdout'

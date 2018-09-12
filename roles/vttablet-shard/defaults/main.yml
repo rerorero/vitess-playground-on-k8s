@@ -1,0 +1,19 @@
+---
+# required additional variables
+# vttablet_uid_base: 100
+# vttablet_cell: { name: test, uid_offset: 100000000 }
+# vttablet_keyspace: test_keyspace
+# vttablet_shard: 0
+vttablet_num: 4
+vttablet_rdonly_num: 1
+vttablet_web_port: 15002
+vttablet_grpc_port: 16002
+vttablet_limits_mem: 1Gi
+vttablet_limits_cpu: 500m
+vttablet_mysql_limits_mem: 1Gi
+vttablet_mysql_limits_cpu: 500m
+vttablet_backup_flags: ""
+# TODO: backup with NFS
+# vttablet_backup_flags: |
+#   -backup_storage_implementation file
+#   -file_backup_storage_root {{ vttablet_backup_dir }}

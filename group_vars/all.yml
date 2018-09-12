@@ -4,8 +4,12 @@ kubeconfig: ~/.kube/config.vultr
 
 namespace: vt
 cells:
-  - cell1
+  - name: cell1
+    uid_offset: 100000000
 global_etcd_cluster_name: global
 global_etcd_service_name: "etcd-{{ global_etcd_cluster_name }}-client"
 
 vitess_image: 'vitess/lite:v2.2'
+
+vtctld_web_nodeport: 31000
+vtctld_grpc_nodeport: 31999

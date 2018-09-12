@@ -1,0 +1,31 @@
+---
+- name: Verify variables
+  assert:
+    that:
+      - "(vttablet_num|int) > vttablet_rdonly_num|int"
+
+- name: Create master pods
+  import_tasks: vttablet.yml
+  vars:
+    uid_index: 0
+    tablet_type: master
+    cellinfo: "{{ vttablet_cell }}"
+
+- name: Create replica pods
+  include_tasks: vttablet.yml
+  vars:
+    tablet_type: replica
+    cellinfo: "{{ vttablet_cell }}"
+  with_sequence: start=1 count="{{ vttablet_num|int - vttablet_rdonly_num|int - 1 }}"
+  loop_control:
+    loop_var: uid_index
+
+- name: Create rdonly pods
+  include_tasks: vttablet.yml
+  vars:
+    tablet_type: rdonly
+    cellinfo: "{{ vttablet_cell }}"
+  with_sequence: start="{{ vttablet_num|int - vttablet_rdonly_num|int }}" count="{{ vttablet_rdonly_num|int }}"
+  loop_control:
+    loop_var: uid_index
+

@@ -14,11 +14,17 @@
   tasks:
     - include_role:
         name: etcd
+      vars:
+        etcd_cluster_name: "{{ item.name }}"
       with_items: "{{ cells }}"
-      loop_control:
-        loop_var: etcd_cluster_name
 
 - hosts: localhost
   gather_facts: no
   roles:
     - vtctld
+
+- hosts: localhost
+  gather_facts: no
+  roles:
+    - find-vtctld-endpoint
+    - cellinfo

@@ -1,0 +1,17 @@
+---
+- name: Get k8s config
+  shell: "kubectl --kubeconfig={{ kubeconfig }} config view"
+  register: config
+
+- name: Parse k8s config
+  set_fact:
+    config_yaml: "{{ config.stdout | from_yaml }}"
+
+- name: Get host of master node
+  set_fact:
+    k8s_master: "{{ config_yaml.clusters[0].cluster.server | urlsplit('hostname') }}"
+
+  # TODO: This is only available when we use Nodeport service.
+- name: Get vtctld endpoint
+  set_fact:
+    vtctld_endpoint: "{{ k8s_master }}:{{ vtctld_grpc_nodeport }}"

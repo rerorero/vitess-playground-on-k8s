@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    id_base: 100
+    shard: 0
+    keyspace: test_ks
+  tasks:
+    - include_role:
+        name: vttablet-shard
+      vars:
+        vttablet_shard: "{{ shard }}"
+        vttablet_uid_base: "{{ id_base }}"
+        vttablet_keyspace: "{{ keyspace }}"
+        vttablet_cell: "{{ item }}"
+      with_items: "{{ cells }}"

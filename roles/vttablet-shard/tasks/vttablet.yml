@@ -1,0 +1,125 @@
+---
+- name: Setup variable
+  set_fact:
+    uid: "{{ vttablet_uid_base|int + cellinfo.uid_offset|int + uid_index|int }}"
+    shard_label: "{{ vttablet_shard | regex_replace('^([^-]*)[-]$', '\\1-xx') | regex_replace('^-([^-]*)$', 'xx-\\1') }}"
+
+- name: Setup variable2
+  set_fact:
+    alias: "{{ '%s-%010d' | format(cellinfo.name, uid|int) }}"
+
+- name: Deploy vttablet pods
+  k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      kind: Pod
+      apiVersion: v1
+      metadata:
+        name: "vttablet-{{ uid }}"
+        namespace: "{{ namespace }}"
+        labels:
+          component: vttablet
+          keyspace: "{{ vttablet_keyspace }}"
+          shard: "{{ shard_label }}"
+          tablet: "{{ alias }}"
+          app: vitess
+      spec:
+        containers:
+          - name: vttablet
+            image: "{{ vitess_image }}"
+            livenessProbe:
+              httpGet:
+                path: /debug/vars
+                port: "{{ vttablet_web_port }}"
+              initialDelaySeconds: 60
+              timeoutSeconds: 10
+            volumeMounts:
+              - name: syslog
+                mountPath: /dev/log
+              - name: vtdataroot
+                mountPath: /vt/vtdataroot
+              - name: certs
+                readOnly: true
+                # Mount root certs from the host OS into the location
+                # expected for our container OS (Debian):
+                mountPath: /etc/ssl/certs/ca-certificates.crt
+            resources:
+              limits:
+                memory: "{{ vttablet_limits_mem }}"
+                cpu: "{{ vttablet_limits_cpu }}"
+            ports:
+              - name: web
+                containerPort: "{{ vttablet_web_port }}"
+              - name: grpc
+                containerPort: "{{ vttablet_grpc_port }}"
+            command:
+              - bash
+              - "-c"
+              - >-
+                set -e
+
+                mkdir -p $VTDATAROOT/tmp
+
+                chown -R vitess /vt
+
+                su -p -s /bin/bash -c "/vt/bin/vttablet
+                -binlog_use_v3_resharding_mode
+                -topo_implementation etcd2
+                -topo_global_server_address http://{{ global_etcd_service_name }}:2379
+                -topo_global_root /global
+                -log_dir $VTDATAROOT/tmp
+                -alsologtostderr
+                -port {{ vttablet_web_port }}
+                -grpc_port {{ vttablet_grpc_port }}
+                -service_map 'grpc-queryservice,grpc-tabletmanager,grpc-updatestream'
+                -tablet-path {{ alias }}
+                -tablet_hostname $(hostname -i)
+                -init_keyspace {{ vttablet_keyspace }}
+                -init_shard {{ vttablet_shard }}
+                -init_tablet_type {{ tablet_type }}
+                -health_check_interval 5s
+                -mysqlctl_socket $VTDATAROOT/mysqlctl.sock
+                -enable_semi_sync
+                -enable_replication_reporter
+                -orc_api_url http://orchestrator/api
+                -orc_discover_interval 5m
+                -restore_from_backup {{ vttablet_backup_flags }}" vitess
+            env:
+              - name: EXTRA_MY_CNF
+                value: /vt/config/mycnf/master_mysql56.cnf
+          - name: mysql
+            image: "{{ vitess_image }}"
+            volumeMounts:
+              - name: syslog
+                mountPath: /dev/log
+              - name: vtdataroot
+                mountPath: /vt/vtdataroot
+            resources:
+              limits:
+                memory: "{{ vttablet_mysql_limits_mem }}"
+                cpu: "{{ vttablet_mysql_limits_cpu }}"
+            command:
+              - sh
+              - "-c"
+              - >-
+                mkdir -p $VTDATAROOT/tmp &&
+                chown -R vitess /vt
+
+                su -p -c "/vt/bin/mysqlctld
+                -log_dir $VTDATAROOT/tmp
+                -alsologtostderr
+                -tablet_uid {{ uid }}
+                -socket_file $VTDATAROOT/mysqlctl.sock
+                -init_db_sql_file $VTROOT/config/init_db.sql" vitess
+            env:
+              - name: EXTRA_MY_CNF
+                value: /vt/config/mycnf/master_mysql56.cnf
+        volumes:
+          - name: syslog
+            hostPath: {path: /dev/log}
+            # TODO: Mount a disk for MySQL data
+          - name: vtdataroot
+            emptyDir: {}
+          - name: certs
+            hostPath: {path: /etc/pki/tls/certs/ca-bundle.crt}
