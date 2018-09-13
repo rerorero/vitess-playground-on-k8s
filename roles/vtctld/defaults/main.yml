@@ -3,7 +3,7 @@ vtctld_web_port: 15000
 vtctld_grpc_port: 15999
 vtctld_limits_mem: "128Mi"
 vtctld_limits_cpu: "100m"
-vtctld_cell: "{{ cells[0] }}"
+vtctld_cell: "{{ cells[0].name }}"
 vtctld_replicas: 2
 vtctld_backup_flags: ""
 # TODO: backup with NFS
