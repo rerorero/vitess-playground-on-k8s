@@ -1,0 +1,7 @@
+---
+- name: Show vtctld endpoints
+  debug:
+    msg:
+      - "Dashboard URL is http://{{ k8s_master }}:{{ vtctld_web_nodeport }}"
+      - "and you can issue vtctl commands via CLI like this."
+      - "$ vtctlclient -server {{ vtctld_endpoint }} help Validate"

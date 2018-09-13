@@ -7,7 +7,14 @@ pip install -r requirments.txt
 ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" site.yml 
 ```
 
-Creates new shard.
+`new-shard.yml` starts tablets and set up a new shard.
 ```
 ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" -e "id_base=100 shard=0 keyspace=ks1" new-shard.yml
 ```
+
+`info.yml` shows Vitess endpoins.
+```
+ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" info.yml
+```
+
+
