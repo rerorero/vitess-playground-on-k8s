@@ -4,19 +4,12 @@
     that:
       - "(vttablet_num|int) > vttablet_rdonly_num|int"
 
-- name: Create master pods
-  import_tasks: vttablet.yml
-  vars:
-    uid_index: 0
-    tablet_type: master
-    cellinfo: "{{ vttablet_cell }}"
-
 - name: Create replica pods
   include_tasks: vttablet.yml
   vars:
     tablet_type: replica
     cellinfo: "{{ vttablet_cell }}"
-  with_sequence: start=1 count="{{ vttablet_num|int - vttablet_rdonly_num|int - 1 }}"
+  with_sequence: start=0 count="{{ vttablet_num|int - vttablet_rdonly_num|int }}"
   loop_control:
     loop_var: uid_index
 
