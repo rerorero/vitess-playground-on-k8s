@@ -12,8 +12,9 @@ vttablet_limits_mem: 1Gi
 vttablet_limits_cpu: 500m
 vttablet_mysql_limits_mem: 1Gi
 vttablet_mysql_limits_cpu: 500m
-vttablet_backup_flags: ""
+vttablet_backup_flags: "-restore_from_backup=false"
 # TODO: backup with NFS
 # vttablet_backup_flags: |
+#   -restore_from_backup
 #   -backup_storage_implementation file
 #   -file_backup_storage_root {{ vttablet_backup_dir }}

@@ -22,3 +22,19 @@
   loop_control:
     loop_var: uid_index
 
+- name: Get shard information
+  command: "vtctlclient -server {{ vtctld_endpoint }} GetShard {{ vttablet_keyspace }}/{{ vttablet_shard }}"
+  register: shard_result
+
+- name: Convert shard information to yaml
+  set_fact:
+    shard_info: "{{ shard_result.stdout | from_yaml }}"
+    # Node which uid_offset is zero become a mster
+    master_alias: "{{ '%s-%010d' | format(vttablet_cell.name, vttablet_uid_base|int + vttablet_cell.uid_offset|int) }}"
+
+- name: Do InitMaster when master node does not exist yet
+  command: "vtctlclient -server {{ vtctld_endpoint }} InitShardMaster -force {{ vttablet_keyspace }}/{{ vttablet_shard }} {{ master_alias }}"
+  when: 'shard_info.master_alias == None'
+
+- name: Verify shard status
+  command: "vtctlclient -server {{ vtctld_endpoint }} Validate {{ vttablet_keyspace }}/{{ vttablet_shard }}"

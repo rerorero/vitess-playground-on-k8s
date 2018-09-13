@@ -80,11 +80,22 @@
                 -init_tablet_type {{ tablet_type }}
                 -health_check_interval 5s
                 -mysqlctl_socket $VTDATAROOT/mysqlctl.sock
+                -db-config-app-uname vt_app
+                -db-config-app-dbname vt_{{ vttablet_keyspace }}
+                -db-config-app-charset utf8
+                -db-config-dba-uname vt_dba
+                -db-config-dba-charset utf8
+                -db-config-repl-uname vt_repl
+                -db-config-repl-dbname vt_{{ vttablet_keyspace }}
+                -db-config-repl-charset utf8
+                -db-config-filtered-uname vt_filtered
+                -db-config-filtered-dbname vt_{{ vttablet_keyspace }}
+                -db-config-filtered-charset utf8
                 -enable_semi_sync
                 -enable_replication_reporter
                 -orc_api_url http://orchestrator/api
                 -orc_discover_interval 5m
-                -restore_from_backup {{ vttablet_backup_flags }}" vitess
+                {{ vttablet_backup_flags }}" vitess
             env:
               - name: EXTRA_MY_CNF
                 value: /vt/config/mycnf/master_mysql56.cnf
@@ -111,6 +122,8 @@
                 -alsologtostderr
                 -tablet_uid {{ uid }}
                 -socket_file $VTDATAROOT/mysqlctl.sock
+                -db-config-dba-uname vt_dba
+                -db-config-dba-charset utf8
                 -init_db_sql_file $VTROOT/config/init_db.sql" vitess
             env:
               - name: EXTRA_MY_CNF
@@ -118,8 +131,14 @@
         volumes:
           - name: syslog
             hostPath: {path: /dev/log}
-            # TODO: Mount a disk for MySQL data
           - name: vtdataroot
+            # TODO: Mount a disk for MySQL data
             emptyDir: {}
           - name: certs
             hostPath: {path: /etc/pki/tls/certs/ca-bundle.crt}
+
+- name: Wait for the tablet to become ready
+  command: "vtctlclient -server {{ vtctld_endpoint }} ListTablets {{ alias }}"
+  register: result
+  until: alias in result.stdout
+  delay: 10

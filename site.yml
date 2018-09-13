@@ -22,9 +22,5 @@
   gather_facts: no
   roles:
     - vtctld
-
-- hosts: localhost
-  gather_facts: no
-  roles:
     - find-vtctld-endpoint
     - cellinfo
