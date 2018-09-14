@@ -2,6 +2,7 @@
 - name: Get all Cell names
   command: "vtctlclient -server {{ vtctld_endpoint }} GetCellInfoNames"
   register: cellnames
+  changed: no
 
 - include_tasks: new-cell.yml
   loop: "{{ cells }}"

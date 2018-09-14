@@ -13,3 +13,6 @@ vitess_image: 'vitess/lite:v2.2'
 
 vtctld_web_nodeport: 31000
 vtctld_grpc_nodeport: 31999
+vtgate_web_nodeport: 31001
+vtgate_grpc_nodeport: 31991
+vtgate_mysqld_nodeport: 31002

@@ -1,0 +1,9 @@
+---
+# required additional variables
+# vtgate_cell: { name: test, uid_offset: 100000000 }
+vtgate_web_port: 15001
+vtgate_grpc_port: 15991
+vtgate_replicas: 2
+vtgate_limits_mem: "512Mi"
+vtgate_limits_cpu: "500m"
+vtgate_mysqld_port: 3306

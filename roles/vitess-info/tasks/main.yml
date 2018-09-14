@@ -5,3 +5,6 @@
       - "Dashboard URL is http://{{ k8s_master }}:{{ vtctld_web_nodeport }}"
       - "and you can issue vtctl commands via CLI like this."
       - "$ vtctlclient -server {{ vtctld_endpoint }} help Validate"
+      - "vtgate endpoints are following:"
+      - "  gRPC: {{ k8s_master }}:{{ vtgate_grpc_nodeport }}"
+      - "  MySQL: {{ k8s_master }}:{{ vtgate_mysqld_nodeport }}"

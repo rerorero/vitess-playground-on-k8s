@@ -24,3 +24,12 @@
     - vtctld
     - find-vtctld-endpoint
     - cellinfo
+
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - include_role:
+        name: vtgate
+      vars:
+        vtgate_cell: "{{ item }}"
+      with_items: "{{ cells }}"

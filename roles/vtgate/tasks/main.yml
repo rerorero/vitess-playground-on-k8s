@@ -1,0 +1,95 @@
+---
+- name: Creating vtgate service
+  k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      kind: Service
+      apiVersion: v1
+      metadata:
+        name: "vtgate-{{ vtgate_cell.name }}"
+        namespace: "{{ namespace }}"
+        labels:
+          component: vtgate
+          cell: "{{ vtgate_cell.name }}"
+          app: vitess
+      spec:
+        ports:
+          - name: web
+            port: "{{ vtgate_web_port }}"
+            NodePort: "{{ vtgate_web_nodeport }}"
+          - name: grpc
+            port: "{{ vtgate_grpc_port }}"
+            NodePort: "{{ vtgate_grpc_nodeport }}"
+          - name: mysql
+            port: "{{ vtgate_mysqld_port }}"
+            NodePort: "{{ vtgate_mysqld_nodeport }}"
+        selector:
+          component: vtgate
+          cell: "{{ vtgate_cell.name }}"
+          app: vitess
+        type: NodePort
+
+- name: Creating vtgate service
+  k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    definition:
+      kind: ReplicationController
+      apiVersion: v1
+      metadata:
+        name: "vtgate-{{ vtgate_cell.name }}"
+        namespace: "{{ namespace }}"
+      spec:
+        replicas: "{{ vtgate_replicas }}"
+        template:
+          metadata:
+            labels:
+              component: vtgate
+              cell: "{{ vtgate_cell.name }}"
+              app: vitess
+          spec:
+            containers:
+              - name: vtgate
+                image: "{{ vitess_image }}"
+                livenessProbe:
+                  httpGet:
+                    path: /debug/vars
+                    port: "{{ vtgate_web_port }}"
+                  initialDelaySeconds: 30
+                  timeoutSeconds: 5
+                volumeMounts:
+                  - name: syslog
+                    mountPath: /dev/log
+                  - name: vtdataroot
+                    mountPath: /vt/vtdataroot
+                resources:
+                  limits:
+                    memory: "{{ vtgate_limits_mem }}"
+                    cpu: "{{ vtgate_limits_cpu }}"
+                command:
+                  - sh
+                  - "-c"
+                  - >-
+                    mkdir -p $VTDATAROOT/tmp &&
+                    chown -R vitess /vt &&
+                    su -p -c "/vt/bin/vtgate
+                    -topo_implementation etcd2
+                    -topo_global_server_address http://{{ global_etcd_service_name }}:2379
+                    -topo_global_root /global
+                    -log_dir $VTDATAROOT/tmp
+                    -alsologtostderr
+                    -port {{ vtgate_web_port }}
+                    -grpc_port {{ vtgate_grpc_port }}
+                    -mysql_server_port {{ vtgate_mysqld_port }}
+                    -mysql_auth_server_static_string '{\"mysql_user\":{\"Password\":\"mysql_password\"}}'
+                    -service_map 'grpc-vtgateservice'
+                    -cells_to_watch {{ vtgate_cell.name }}
+                    -tablet_types_to_wait MASTER,REPLICA
+                    -gateway_implementation discoverygateway
+                    -cell {{ vtgate_cell.name }}" vitess
+            volumes:
+              - name: syslog
+                hostPath: {path: /dev/log}
+              - name: vtdataroot
+                emptyDir: {}

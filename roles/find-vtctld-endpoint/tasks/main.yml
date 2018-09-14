@@ -1,7 +1,8 @@
 ---
 - name: Get k8s config
-  shell: "kubectl --kubeconfig={{ kubeconfig }} config view"
+  command: "kubectl --kubeconfig={{ kubeconfig }} config view"
   register: config
+  changed: no
 
 - name: Parse k8s config
   set_fact:

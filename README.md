@@ -20,4 +20,5 @@ ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" info.yml
 ### Apply schema
 ```
 vtctlclient -server ${vitess_endpoint} ApplySchema -sql "$(cat create_test_table.sql)" testks
+vtctlclient -server ${vitess_endpoint} RebuildVSchemaGraph
 ```
