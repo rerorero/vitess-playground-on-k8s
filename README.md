@@ -17,8 +17,21 @@ ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" -e "id_base=100 shard=0 ke
 ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" info.yml
 ```
 
-### Apply schema
+### Run a example
+Setup a new table and a schema.
 ```
-vtctlclient -server ${vitess_endpoint} ApplySchema -sql "$(cat create_test_table.sql)" testks
+vtctlclient -server ${vitess_endpoint} ApplySchema -sql "$(cat ./example/create_test_table.sql)" testks
 vtctlclient -server ${vitess_endpoint} RebuildVSchemaGraph
+```
+Running `example/main.php` inserts some random generated rows to the table.
+```
+php main.php ${vitess_endpoint} 31002 testks
+```
+The followings shows an example of resharding.
+```
+# Apply VSchema
+vtctlclient -server ${vitess_endpoint} ApplyVSchema -vschema "$(cat ./example/vschema.json)" testks
+# Deploy tablets for new shard.
+ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" -e "id_base=200 shard=-80 keyspace=testks" new-shard.yml
+ansible-playbook -e "kubeconfig=<PATH TO KUBECONFIG>" -e "id_base=300 shard=80- keyspace=testks" new-shard.yml
 ```

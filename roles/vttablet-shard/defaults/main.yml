@@ -4,7 +4,7 @@
 # vttablet_cell: { name: test, uid_offset: 100000000 }
 # vttablet_keyspace: test_keyspace
 # vttablet_shard: 0
-vttablet_num: 4
+vttablet_num: 3
 vttablet_rdonly_num: 1
 vttablet_web_port: 15002
 vttablet_grpc_port: 16002
