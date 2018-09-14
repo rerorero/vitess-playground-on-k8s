@@ -82,7 +82,7 @@
                     -port {{ vtgate_web_port }}
                     -grpc_port {{ vtgate_grpc_port }}
                     -mysql_server_port {{ vtgate_mysqld_port }}
-                    -mysql_auth_server_static_string '{\"mysql_user\":{\"Password\":\"mysql_password\"}}'
+                    -mysql_auth_server_static_string '{\"{{ vtgate_mysql_user }}\":{\"Password\":\"{{ vtgate_mysql_pass }}\"}}'
                     -service_map 'grpc-vtgateservice'
                     -cells_to_watch {{ vtgate_cell.name }}
                     -tablet_types_to_wait MASTER,REPLICA

@@ -7,3 +7,6 @@ vtgate_replicas: 2
 vtgate_limits_mem: "512Mi"
 vtgate_limits_cpu: "500m"
 vtgate_mysqld_port: 3306
+# TODO: should be hidden
+vtgate_mysql_user: mysql_user
+vtgate_mysql_pass: mysql_password
